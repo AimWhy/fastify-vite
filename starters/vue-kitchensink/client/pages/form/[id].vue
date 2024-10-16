@@ -16,8 +16,8 @@ export function getData ({ req, reply }) {
 </script>
 
 <script setup>
-import { useRouteContext } from '/:core.js'
-const { data } = useRouteContext()
+import { useData } from '$app/hooks'
+const data = useData()
 </script>
 
 <template>

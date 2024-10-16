@@ -1,12 +1,12 @@
 import { createApp, createSSRApp, reactive, ref } from 'vue'
 import { createRouter } from 'vue-router'
 import {
-  isServer,
   createHistory,
   serverRouteContext,
   routeLayout,
   createBeforeEachHandler,
-} from '/:core.js'
+} from '@fastify/vue/client'
+
 import * as root from '/:root.vue'
 
 export default async function create (ctx) {
@@ -20,6 +20,7 @@ export default async function create (ctx) {
   const router = createRouter({ history, routes })
   const layoutRef = ref(ctxHydration.layout ?? 'default')
 
+  const isServer = import.meta.env.SSR
   instance.config.globalProperties.$isServer = isServer
 
   instance.provide(routeLayout, layoutRef)
@@ -39,10 +40,5 @@ export default async function create (ctx) {
     await root.configure({ app: instance, router })
   }
 
-  if (ctx.url) {
-    router.push(ctx.url)
-    await router.isReady()
-  }
-
-  return { instance, ctx, router }
+  return { instance, ctx, state: ctxHydration.state, router }
 }
