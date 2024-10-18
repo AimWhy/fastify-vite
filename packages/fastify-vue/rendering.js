@@ -16,33 +16,21 @@ export async function createRenderFunction ({ routes, create }) {
   }
 }
 
-async function createStreamingResponse (req, routes, routeMap, create) {
-  // Vue application instance
-  const app = await create({
-    routes,
-    routeMap,
-    ctxHydration: req.route,
-    url: req.url,
-  })
+async function createStreamingResponse (req, routes) {
+  req.route.router.push(req.url)
+  await req.route.router.isReady()
   // SSR stream
-  const body = renderToNodeStream(app.instance, app.ctx)
+  const body = renderToNodeStream(req.route.app, req.route.ssrContext)
   return { routes, context: req.route, body }
 }
 
-async function createResponse (req, routes, routeMap, create) {
-  console.log('createResponse()')
+async function createResponse (req, routes) {
   let body
   if (!req.route.clientOnly) {
-    // Vue application instance
-    const app = await create({
-      routes,
-      routeMap,
-      ctxHydration: req.route,
-      url: req.url,
-    })
+    req.route.router.push(req.url)
+    await req.route.router.isReady()
     // SSR string
-    body = await renderToString(app.instance, app.ctx)
-    console.log('app.ctx', app.ctx)
+    body = await renderToString(req.route.app, req.route.ssrContext)
   }
   return { routes, context: req.route, body }
 }
@@ -78,6 +66,7 @@ export async function createHtmlFunction (source, _, config) {
       )
     }
 
+    console.dir(context.toJSON(), { depth: null })
     // Embed full hydration script
     context.hydration = (
       `<script>\nwindow.route = ${
